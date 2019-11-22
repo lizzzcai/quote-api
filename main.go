@@ -22,10 +22,7 @@ func main() {
 }
 
 func homePage(writer http.ResponseWriter, reqest *http.Request) {
-	_, err := fmt.Fprintf(writer, "Welcome to the inspirational quote API homepage\n")
-	if err != nil {
-		log.Panic(err)
-	}
+	writeJson(writer, &JsonMessage{"welcome to the inspirational quote homepage"}, 200)
 }
 
 func quotes(writer http.ResponseWriter, request *http.Request) {
@@ -38,35 +35,34 @@ func quotes(writer http.ResponseWriter, request *http.Request) {
 		getRandomQuote(writer)
 		return
 	}
-
-	writeResponseOrPanic(writer, "Invalid request method\n")
+	writeJson(writer, &JsonMessage{"ivalid request method"}, 422)
 }
 
 // insert a new quote into database
 func newQuote(writer http.ResponseWriter, request *http.Request) {
 	quote, err := NewQuoteFromRequest(request)
 	if err != nil {
-		writeResponseOrPanic(writer, fmt.Sprintf("Error: unable to create a quote from request data.\nmessage: %s\n", err.Error()))
+		writeJson(writer, &JsonMessage{err.Error()}, 422)
 		return
 	}
 	err = quote.storeInDatabase()
 	if err != nil {
-		writeResponseOrPanic(writer, fmt.Sprintf("error while storing quote in database.\nmessage: %s\n", err.Error()))
+		writeJson(writer, &JsonMessage{err.Error()}, 422)
 		return
 	}
 
-	writeResponseOrPanic(writer, fmt.Sprintf("Quote added: \"%s\"\n", quote.Quote))
+	writeJson(writer, &JsonMessage{"Quote added"}, 200)
 }
 
 // Get a random quote from database
 func getRandomQuote(writer http.ResponseWriter) {
 	quoteStruct, err := RandomQuoteFromDatabase()
 	if err != nil {
-		writeJson(writer, JsonMessage{err.Error()}, 422)
+		writeJson(writer, &JsonMessage{err.Error()}, 422)
 		return
 	}
 
-	writeJson(writer, quoteStruct, 200)
+	writeJson(writer, &quoteStruct, 200)
 }
 
 // Will write a response using the http.ResponseWriter. If it fails it will panic.
@@ -77,6 +73,7 @@ func writeResponseOrPanic(writer http.ResponseWriter, message string) {
 	}
 }
 
+// Write output as json.
 func writeJson(writer http.ResponseWriter, data interface{}, status int) {
 	writer.Header().Set("Content-Type", "application/json")
 	writer.WriteHeader(status)
