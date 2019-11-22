@@ -7,6 +7,10 @@ import (
 	"net/http"
 )
 
+type JsonMessage struct {
+	Message string `json:"message"`
+}
+
 func main() {
 	http.HandleFunc("/", homePage)
 	http.HandleFunc("/quotes", quotes)
@@ -58,10 +62,11 @@ func newQuote(writer http.ResponseWriter, request *http.Request) {
 func getRandomQuote(writer http.ResponseWriter) {
 	quoteStruct, err := RandomQuoteFromDatabase()
 	if err != nil {
-		writeResponseOrPanic(writer, fmt.Sprintf("Error: unable to get quote from database\n%s\n", err.Error()))
+		writeJson(writer, JsonMessage{err.Error()}, 422)
 		return
 	}
-	writeResponseOrPanic(writer, fmt.Sprintf("{\"quote\": \"%s\"}\n", quoteStruct.Quote))
+
+	writeJson(writer, quoteStruct, 200)
 }
 
 // Will write a response using the http.ResponseWriter. If it fails it will panic.
