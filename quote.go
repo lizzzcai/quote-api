@@ -44,11 +44,11 @@ func RandomQuoteFromDatabase() (*QuoteStruct, error) {
 	if err != nil {
 		return nil, err
 	}
-
+	defer row.Close()
 	if !row.Next() {
 		return nil, errors.New("no quote in database found")
 	}
-
+	
 	var quote string
 	err = row.Scan(&quote)
 	if err != nil {
